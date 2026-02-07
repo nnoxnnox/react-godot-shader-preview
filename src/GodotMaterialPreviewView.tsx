@@ -23,11 +23,13 @@ const cn = {
   preview: 'rgs-preview',
   canvas: 'rgs-canvas',
   mouseBlockOverlay: 'rgs-mouseBlockOverlay',
+  previewOverlays: 'rgs-previewOverlays',
   modeStrip: 'rgs-modeStrip',
   modeStripButton: 'rgs-modeStripButton',
   modeStripButtonActive: 'rgs-modeStripButtonActive',
   loadingOverlay: 'rgs-loadingOverlay',
   statusBar: 'rgs-statusBar',
+  statusBarSlot: 'rgs-statusBarSlot',
   statusSuccess: 'rgs-statusSuccess',
   statusError: 'rgs-statusError',
   paramsPanel: 'rgs-paramsPanel',
@@ -95,22 +97,24 @@ export function GodotMaterialPreviewView({
         <div className={cn.preview}>
           <iframe ref={iframeRef} src={embedUrl} title="Shader preview" className={cn.canvas} />
           {!allowMouseInteraction && <div className={cn.mouseBlockOverlay} aria-hidden />}
-          {showMeshSwitch && (
-            <div className={cn.modeStrip} role="group" aria-label="Preview display mode">
-              <button type="button" className={`${cn.modeStripButton} ${displayMode === 'Circle' ? cn.modeStripButtonActive : ''}`} onClick={() => setDisplayMode('Circle')} title="Sphere" aria-pressed={displayMode === 'Circle'} aria-label="Sphere"><CircleIcon /></button>
-              <button type="button" className={`${cn.modeStripButton} ${displayMode === 'Plane' ? cn.modeStripButtonActive : ''}`} onClick={() => setDisplayMode('Plane')} title="Plane" aria-pressed={displayMode === 'Plane'} aria-label="Plane"><DiamondIcon /></button>
-            </div>
-          )}
-          {godotLoading && (
-            <div className={cn.loadingOverlay}><div>{status?.message ?? 'Loading...'}</div></div>
-          )}
+          <div className={cn.previewOverlays}>
+            {showMeshSwitch && (
+              <div className={cn.modeStrip} role="group" aria-label="Preview display mode">
+                <button type="button" className={`${cn.modeStripButton} ${displayMode === 'Circle' ? cn.modeStripButtonActive : ''}`} onClick={() => setDisplayMode('Circle')} title="Sphere" aria-pressed={displayMode === 'Circle'} aria-label="Sphere"><CircleIcon /></button>
+                <button type="button" className={`${cn.modeStripButton} ${displayMode === 'Plane' ? cn.modeStripButtonActive : ''}`} onClick={() => setDisplayMode('Plane')} title="Plane" aria-pressed={displayMode === 'Plane'} aria-label="Plane"><DiamondIcon /></button>
+              </div>
+            )}
+            {godotLoading && (
+              <div className={cn.loadingOverlay}><div>{status?.message ?? 'Loading...'}</div></div>
+            )}
+          </div>
         </div>
       </div>
-      {status && !godotLoading && (
-        <div className={cn.statusBar}>
+      <div className={cn.statusBarSlot}>
+        {status && !godotLoading ? (
           <span className={status.error ? cn.statusError : cn.statusSuccess}>{status.message}</span>
-        </div>
-      )}
+        ) : null}
+      </div>
       {showParameters && (
         <div className={cn.paramsPanel}>
           <div className={cn.paramsTitle}>{uniforms.length > 0 ? 'Shader parameters' : 'Parameters'}</div>
