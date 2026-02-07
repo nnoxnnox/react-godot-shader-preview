@@ -3,58 +3,37 @@
   "version": "0.5.0",
   "description": "React component for live Godot shader preview via WebAssembly. Load shader code, switch mesh (sphere/plane), edit uniforms and samplers.",
   "type": "module",
-  "main": "./dist/godot-shader-preview.umd.cjs",
-  "module": "./dist/godot-shader-preview.js",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/godot-shader-preview.js",
-      "require": "./dist/godot-shader-preview.umd.cjs"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./style.css": {
       "import": "./dist/style.css",
-      "require": "./dist/style.css",
       "default": "./dist/style.css"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist", "godot"],
   "scripts": {
-    "build": "vite build && tsc --emitDeclarationOnly --outDir dist",
+    "build": "tsc && node scripts/copy-css.mjs",
     "prepublishOnly": "yarn build"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
-  "dependencies": {
-    "ajv": "^8.17.1",
-    "lucide-react": "^0.563.0"
-  },
   "devDependencies": {
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^5.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "typescript": "~5.9.0",
-    "vite": "^6.0.0"
+    "typescript": "~5.9.0"
   },
-  "keywords": [
-    "godot",
-    "shader",
-    "gdshader",
-    "webgl",
-    "webassembly",
-    "react",
-    "preview"
-  ],
+  "keywords": ["godot", "shader", "gdshader", "webgl", "webassembly", "react", "preview"],
   "author": "Daniil Pshegorlisnkii (https://github.com/nnoxnnox)",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nnoxnnox/react-godot-shader-preview"
-  }
+  "repository": { "type": "git", "url": "https://github.com/nnoxnnox/react-godot-shader-preview" }
 }
