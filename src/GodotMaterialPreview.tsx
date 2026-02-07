@@ -6,8 +6,7 @@ import { useGodotMaterialPreview } from './useGodotMaterialPreview';
 export type { ShaderUniform, GodotMaterialPreviewHandle, ShaderLoadedPayload, DisplayMode, GodotMaterialPreviewProps } from './GodotMaterialPreview.types';
 
 const DEFAULTS = {
-  godotEmbedUrl: '/godot/embed.html',
-  previewWidth: 320,
+  previewWidth: 512,
   showMeshSwitch: true,
   allowMouseInteraction: true,
   showParameters: false,
