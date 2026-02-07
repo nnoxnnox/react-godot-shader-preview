@@ -48,7 +48,13 @@ declare global {
   }
 }
 
+/** Default folder name created by postinstall in the app root. */
+export const RGS_EMBED_FOLDER = 'react_godot_shader_preview_embed';
+
 export interface GodotMaterialPreviewProps {
+  /** URL to the Godot embed page (e.g. `/react_godot_shader_preview_embed/embed.html` after postinstall).
+   * postinstall copies it to your project root as `react_godot_shader_preview_embed`. */
+  embedUrl?: string;
   previewWidth?: number;
   showMeshSwitch?: boolean;
   allowMouseInteraction?: boolean;
