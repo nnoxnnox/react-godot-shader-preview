@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>web_shader_viewer</title>
+    <style>
+        body { margin: 0; padding: 16px; font-family: system-ui, -apple-system, sans-serif; background: #1a1a1a; color: #c6c6c6; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        canvas { cursor: grab; }
+        h1 { margin: 0 0 16px 0; font-size: 1.5rem; color: #c6c6c6; }
+        .viewer-row { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px; min-height: 400px; }
+        .viewer-code { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .viewer-code .code-wrap { flex: 1; min-height: 360px; position: relative; border: 1px solid #444; border-radius: 6px; overflow: hidden; background: #1a1a1a; }
+        .code-wrap textarea { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 12px 14px; resize: none; border: none; background: transparent; color: transparent; caret-color: #c6c6c6; font: 14px/1.5 'Consolas', 'Monaco', monospace; outline: none; z-index: 2; }
+        .code-wrap pre { margin: 0; padding: 12px 14px; overflow: auto; font: 14px/1.5 'Consolas', 'Monaco', monospace; white-space: pre; word-wrap: normal; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: transparent; color: #c6c6c6; }
+        .code-wrap pre code { font: inherit; background: transparent; }
+        /* Godot shader colors */
+        .code-wrap .token.comment { color: #6a9955; font-style: italic; }
+        .code-wrap .token.keyword { color: #ff7085; }
+        .code-wrap .token['shader-type'] .token.keyword { color: #ff7085; }
+        .code-wrap .token['shader-type'] .token.type { color: #9df8da; }
+        .code-wrap .token.builtin-type { color: #ff7085; }
+        .code-wrap .token.processor { color: #ff7085; }
+        .code-wrap .token['builtin-constant'] { color: #9df8da; }
+        .code-wrap .token['builtin-output'] { color: #9df8da; }
+        .code-wrap .token.function { color: #57b3ff; }
+        .code-wrap .token.number { color: #9df8da; }
+        .code-wrap .token.operator { color: #a4c1f4; }
+        .code-wrap .token.punctuation { color: #a4c1f4; }
+        .code-wrap .token.variable { color: #c6c6c6; }
+        .validation-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 28px; padding: 4px 12px; margin-top: 0; font-size: 12px; font-family: 'Consolas', 'Monaco', monospace; background: #252525; border: 1px solid #444; border-top: none; border-radius: 0 0 6px 6px; color: #c6c6c6; }
+        .validation-bar .validation-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .validation-bar .validation-chevron { color: #888; cursor: pointer; user-select: none; }
+        .validation-bar.collapsed .validation-message { display: none; }
+        .validation-bar.collapsed .validation-meta { display: none; }
+        .validation-bar .validation-message { color: #c6c6c6; }
+        .validation-bar.has-error .validation-message { color: #e07c6e; }
+        .validation-bar .validation-meta { display: flex; align-items: center; gap: 12px; color: #888; flex-shrink: 0; }
+        .validation-bar .validation-meta span { white-space: nowrap; }
+        .viewer-code .code-wrap { border-radius: 6px 6px 0 0; }
+        .viewer-code .toolbar { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+        .viewer-code .toolbar button { background: #4a9eff; color: white; border: none; padding: 8px 16px; font-size: 14px; cursor: pointer; border-radius: 4px; }
+        .viewer-code .toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .viewer-code .toolbar button:hover { background: #3a8eef; }
+        .viewer-preview-wrap { flex: 0 0 320px; max-width: 100%; min-width: 0; }
+        .viewer-preview { width: 100%; padding-bottom: 100%; height: 0; position: relative; overflow: hidden; border: 1px solid #444; border-radius: 6px; background: #000; }
+        @media (max-width: 700px) { .viewer-row { flex-direction: column; } .viewer-preview-wrap { flex: 0 0 auto; width: 100%; max-width: 400px; } }
+        #godot-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: fill; }
+        .status { padding: 8px 12px; border-radius: 4px; font-size: 13px; margin-top: 8px; }
+        .status.success { background: #1e3a1e; color: #8fef8f; }
+        .status.error { background: #3a1e1e; color: #ef8f8f; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Godot Shader Viewer</h1>
+        <div class="viewer-row">
+            <div class="viewer-code">
+                <div class="code-wrap">
+                    <textarea id="shader-editor" spellcheck="false" placeholder="shader_type spatial;&#10;void fragment() { ... }">shader_type spatial;
+uniform float metallic;
+uniform float roughness;
+
+void fragment() {
+    vec3 base_color = vec3(0.2, 0.4, 0.8);
+    vec3 light_dir = normalize(vec3(1.0, 1.0, 1.0));
+    float ndotl = dot(NORMAL, light_dir);
+    ndotl = max(ndotl, 0.2);
+    ALBEDO = base_color * ndotl;
+    METALLIC = metallic;
+    ROUGHNESS = roughness;
+}</textarea>
+                    <pre aria-hidden="true"><code id="shader-highlight" class="language-gdshader"></code></pre>
+                </div>
+                <div id="validation-bar" class="validation-bar">
+                    <div class="validation-left">
+                        <span class="validation-chevron" id="validation-chevron" aria-hidden="true">&lt;</span>
+                        <span class="validation-message" id="validation-message"></span>
+                    </div>
+                    <div class="validation-meta">
+                        <span id="validation-zoom">100 %</span>
+                        <span id="validation-cursor">1 : 1</span>
+                        <span>Tabs</span>
+                    </div>
+                </div>
+                <div class="toolbar">
+                    <button id="load-shader-btn" onclick="loadShader()">Load Shader</button>
+                    <span id="status" class="status"></span>
+                </div>
+            </div>
+            <div class="viewer-preview-wrap">
+                <div class="viewer-preview">
+                    <canvas id="godot-canvas" width="512" height="512"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script>
+        (function() {
+            Prism.languages.gdshader = {
+                'comment': [
+                    { pattern: /\/\*[\s\S]*?\*\//, greedy: true },
+                    { pattern: /\/\/.*/, greedy: true }
+                ],
+                'shader-type': {
+                    pattern: /\b(?:shader_type|render_mode)\s+\w+\s*;/,
+                    inside: {
+                        'keyword': /\b(?:shader_type|render_mode)\b/,
+                        'type': /\b(?:spatial|canvas_item|particles|sky|fog|skin|blend_add|unshaded)\b/
+                    }
+                },
+                'keyword': /\b(?:if|else|for|while|do|break|continue|return|switch|case|default|discard|struct|const|uniform|varying|in|out|inout|flat|smooth)\b/,
+                'builtin-type': /\b(?:void|bool|float|int|uint|vec2|vec3|vec4|mat2|mat3|mat4|sampler2D|sampler2DArray|sampler3D|samplerCube|isampler2D|usampler2D)\b/,
+                'processor': /\b(?:vertex|fragment|light|start|process)\s*(?=\s*\()/,
+                'builtin-constant': /\b(?:NORMAL|NORMALMAP|NORMALMAP_DEPTH|UV|UV2|COLOR|VERTEX|FRAGCOORD|SCREEN_UV|POINT_COORD|INSTANCE_ID|INSTANCE_CUSTOM|AT_LIGHT_PASS|NODE_POSITION_WORLD|CAMERA_POSITION_WORLD|NODE_POSITION_VIEW|CAMERA_POSITION_VIEW|NODE_DIRECTION_VIEW|CAMERA_DIRECTION_VIEW|TIME|TIME_DELTA|PI|TAU|E)\b/,
+                'builtin-output': /\b(?:ALBEDO|ALPHA|METALLIC|ROUGHNESS|EMISSION)\b/,
+                'function': /\b(?:normalize|dot|max|min|sqrt|pow|sin|cos|tan|abs|floor|ceil|clamp|mix|step|smoothstep|length|distance|reflect|refract|cross|dot)\s*(?=\s*\()/,
+                'number': /\b(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?[fF]?\b|\b0[xX][0-9a-fA-F]+\b/,
+                'operator': /[=+\-*/%&|^!<>]=?|\|\||&&|<<?|>>?/,
+                'punctuation': /[{}();,\[\].:]/,
+                'variable': /\b[a-zA-Z_]\w*\b/
+            };
+        })();
+    </script>
+    <script src="index.js"></script>
+    <script>
+        (function() {
+            var ta = document.getElementById('shader-editor');
+            var code = document.getElementById('shader-highlight');
+            function highlight() {
+                code.textContent = ta.value;
+                Prism.highlightElement(code);
+            }
+            function syncScroll() {
+                code.parentElement.scrollTop = ta.scrollTop;
+                code.parentElement.scrollLeft = ta.scrollLeft;
+            }
+            ta.addEventListener('input', highlight);
+            ta.addEventListener('scroll', syncScroll);
+            highlight();
+        })();
+
+        (function() {
+            var SHADER_SCHEMA = {
+                requiredShaderType: true,
+                requiredEntrypoint: true,
+                builtinConstants: ['NORMAL','NORMALMAP','NORMALMAP_DEPTH','UV','UV2','COLOR','VERTEX','FRAGCOORD','SCREEN_UV','POINT_COORD','INSTANCE_ID','INSTANCE_CUSTOM','AT_LIGHT_PASS','NODE_POSITION_WORLD','CAMERA_POSITION_WORLD','NODE_POSITION_VIEW','CAMERA_POSITION_VIEW','NODE_DIRECTION_VIEW','CAMERA_DIRECTION_VIEW','TIME','TIME_DELTA','PI','TAU','E'],
+                builtinOutputs: ['ALBEDO','ALPHA','METALLIC','ROUGHNESS','EMISSION'],
+                builtinTypes: ['void','bool','float','int','uint','vec2','vec3','vec4','mat2','mat3','mat4','sampler2D','sampler2DArray','sampler3D','samplerCube','isampler2D','usampler2D'],
+                builtinFunctions: ['normalize','dot','max','min','sqrt','pow','sin','cos','tan','abs','floor','ceil','clamp','mix','step','smoothstep','length','distance','reflect','refract','cross','min','max','sign','mod','fract','modf','round','trunc','radians','degrees','exp','log','exp2','log2','inversesqrt','determinant','transpose','inverse','texture','textureLod','textureSize'],
+                directiveValues: ['spatial','canvas_item','particles','sky','fog','skin','blend_add','unshaded','blend_mix','blend_sub','blend_mul','depth_draw_opaque','depth_draw_always','depth_draw_never','depth_test_disabled','cull_back','cull_front','cull_disabled','diffuse_burley','diffuse_lambert','specular_schlick_ggx','skip_vertex_transform','world_vertex_coords','ensure_correct_normals','shadows_disabled']
+            };
+            function validateShader(source) {
+                var errors = [];
+                var lines = source.split(/\r?\n/);
+                var hasShaderType = /\bshader_type\s+\w+\s*;/.test(source);
+                var hasEntrypoint = /\bvoid\s+(?:vertex|fragment|light|start|process)\s*\s*\(/.test(source);
+                if (SHADER_SCHEMA.requiredShaderType && !hasShaderType) {
+                    errors.push({ line: 1, message: "Missing 'shader_type' declaration." });
+                }
+                if (SHADER_SCHEMA.requiredEntrypoint && !hasEntrypoint) {
+                    errors.push({ line: 1, message: "Missing entrypoint (e.g. void fragment() or void vertex())." });
+                }
+                var allowed = new Set([].concat(SHADER_SCHEMA.builtinConstants, SHADER_SCHEMA.builtinOutputs, SHADER_SCHEMA.builtinTypes, SHADER_SCHEMA.builtinFunctions, SHADER_SCHEMA.directiveValues || []));
+                var declared = new Set();
+                var identifier = /\b([a-zA-Z_][a-zA-Z0-9_]*)\b/g;
+                var inComment = false;
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i];
+                    var stripped = line.replace(/\/\/.*$/, '').replace(/\/\*[\s\S]*?\*\//g, '');
+                    var match;
+                    if (/^\s*(?:uniform|varying)\s+(?:\w+\s+)+(\w+)/.test(stripped)) {
+                        match = stripped.match(/(\w+)\s*[;\[,]/);
+                        if (match) declared.add(match[1]);
+                    }
+                    if (/^\s*(?:float|int|uint|bool|vec2|vec3|vec4|mat2|mat3|mat4)\s+(\w+)/.test(stripped)) {
+                        match = stripped.match(/(?:float|int|uint|bool|vec2|vec3|vec4|mat2|mat3|mat4)\s+(\w+)/);
+                        if (match) declared.add(match[1]);
+                    }
+                }
+                allowed.forEach(function(x) { declared.add(x); });
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i];
+                    var noComments = line.replace(/\/\/.*$/, '').replace(/\/\*[\s\S]*?\*\//g, '');
+                    var m;
+                    identifier.lastIndex = 0;
+                    while ((m = identifier.exec(noComments)) !== null) {
+                        var id = m[1];
+                        if (/^\d/.test(id)) continue;
+                        if (allowed.has(id) || declared.has(id)) continue;
+                        var kw = ['shader_type','render_mode','if','else','for','while','do','return','break','continue','switch','case','default','discard','struct','const','in','out','inout','flat','smooth','vertex','fragment','light','start','process'];
+                        if (kw.indexOf(id) !== -1) continue;
+                        errors.push({ line: i + 1, message: "Unknown identifier in expression: '" + id + "'." });
+                        break;
+                    }
+                }
+                return { valid: errors.length === 0, errors: errors };
+            }
+
+            var validationBar = document.getElementById('validation-bar');
+            var validationMessage = document.getElementById('validation-message');
+            var validationCursor = document.getElementById('validation-cursor');
+            var loadShaderBtn = document.getElementById('load-shader-btn');
+            var lastValidation = { valid: true, errors: [] };
+
+            function updateCursorPos() {
+                var ta = document.getElementById('shader-editor');
+                var text = ta.value;
+                var pos = ta.selectionStart;
+                var line = 1, col = 1;
+                for (var i = 0; i < pos && i < text.length; i++) {
+                    if (text[i] === '\n') { line++; col = 1; } else col++;
+                }
+                validationCursor.textContent = line + ' : ' + col;
+            }
+
+            function runValidation() {
+                var source = document.getElementById('shader-editor').value;
+                lastValidation = validateShader(source);
+                if (lastValidation.valid) {
+                    validationBar.classList.remove('has-error');
+                    validationMessage.textContent = '';
+                } else {
+                    validationBar.classList.add('has-error');
+                    var first = lastValidation.errors[0];
+                    validationMessage.textContent = 'Error at line ' + first.line + ': ' + first.message;
+                }
+                loadShaderBtn.disabled = !lastValidation.valid;
+            }
+
+            document.getElementById('shader-editor').addEventListener('input', runValidation);
+            document.getElementById('shader-editor').addEventListener('keyup', updateCursorPos);
+            document.getElementById('shader-editor').addEventListener('click', updateCursorPos);
+            document.getElementById('validation-chevron').addEventListener('click', function() {
+                validationBar.classList.toggle('collapsed');
+            });
+            updateCursorPos();
+            runValidation();
+            window.__shaderValidation = { validate: validateShader, getLastResult: function() { return lastValidation; } };
+        })();
+        console.log('[VIEWER] script start');
+        var statusDiv = document.getElementById('status');
+        var viewerReady = false;
+        function showStatus(msg, isError, clearAfterMs) {
+            statusDiv.textContent = msg;
+            statusDiv.className = 'status ' + (isError ? 'error' : 'success');
+            if (clearAfterMs) setTimeout(function() { statusDiv.textContent = ''; statusDiv.className = 'status'; }, clearAfterMs);
+        }
+        window.__godotShaderViewerReady = function() {
+            viewerReady = true;
+            showStatus('Viewer ready. You can load shaders.', false, 5000);
+        };
+        function loadShader() {
+            var result = window.__shaderValidation && window.__shaderValidation.getLastResult ? window.__shaderValidation.getLastResult() : { valid: true };
+            if (!result.valid) {
+                showStatus('Fix validation errors before loading.', true, 3000);
+                return;
+            }
+            var shaderCode = document.getElementById('shader-editor').value;
+            if (window.GodotShaderViewer && window.GodotShaderViewer.loadShader) {
+                window.GodotShaderViewer.onSuccess = function() { showStatus('Shader loaded successfully!', false, 3000); };
+                window.GodotShaderViewer.onError = function(err) { showStatus('Error: ' + err, true, 3000); };
+                window.GodotShaderViewer.loadShader(shaderCode);
+            } else {
+                showStatus('Viewer not ready. Wait for "Viewer ready" message.', true, 3000);
+            }
+        }
+
+        if (typeof Engine === 'undefined') {
+            showStatus('Error: Engine not found. Script did not load.', true, 0);
+        } else {
+            var baseConfig = typeof {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":2832040,"index.wasm":37686550},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4} !== 'undefined' ? {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":2832040,"index.wasm":37686550},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4} : {};
+            var canvasEl = document.getElementById('godot-canvas');
+            showStatus('Loading…', false, null);
+            var engine = new Engine(baseConfig);
+            var startOverrides = {
+                canvas: canvasEl,
+                canvasResizePolicy: 0,
+                locateFile: function(path, scriptDirectory) {
+                    if (path.endsWith('.wasm')) return scriptDirectory + (baseConfig.executable || 'index') + '.wasm';
+                    if (path.endsWith('.pck')) return scriptDirectory + (baseConfig.mainPack || (baseConfig.executable || 'index') + '.pck');
+                    return scriptDirectory + path;
+                },
+                onProgress: function(current, total) {
+                    if (total > 0) showStatus('Loading: ' + Math.round((current / total) * 100) + '%', false, 2000);
+                },
+                onPrint: function() { console.log('[Godot]', ...arguments); },
+                onPrintError: function() { console.error('[Godot]', ...arguments); }
+            };
+            engine.startGame(startOverrides).then(function() {
+                showStatus('Loading scene…', false, null);
+                var checkReady = setInterval(function() {
+                    if (viewerReady) { clearInterval(checkReady); return; }
+                    var w = window.top || window;
+                    if (w.GodotShaderViewer && w.GodotShaderViewer.loadShader) {
+                        viewerReady = true;
+                        clearInterval(checkReady);
+                        showStatus('Viewer ready. You can load shaders.', false, 5000);
+                    }
+                }, 300);
+                setTimeout(function() {
+                    clearInterval(checkReady);
+                    if (!viewerReady) showStatus('Viewer did not signal ready. Check console.', true, 0);
+                }, 8000);
+            }).catch(function(err) {
+                showStatus('Failed to start: ' + (err && err.message ? err.message : err), true, 0);
+                console.error('[VIEWER] startGame failed', err);
+            });
+        }
+    </script>
+</body>
+</html>
+
