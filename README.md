@@ -10,6 +10,8 @@ yarn add react-godot-shader-preview
 npm install react-godot-shader-preview
 ```
 
+On install, the package **postinstall** copies the Godot export from `node_modules/react-godot-shader-preview/godot` into your project root as **`react_godot_shader_preview_embed/`**. Serve that folder (e.g. as static assets) and pass its embed URL to the component (see `embedUrl` below). If you use a different path or host the embed elsewhere, pass that URL instead.
+
 ## Usage
 
 Import the component and styles:
@@ -45,6 +47,7 @@ function App() {
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
+| `embedUrl` | `string` | `"/react_godot_shader_preview_embed/embed.html"` | URL of the Godot embed page. After postinstall this path points to the copied folder; override if you serve the embed elsewhere. |
 | `previewWidth` | `number` | `512` | Preview width (px). |
 | `showMeshSwitch` | `boolean` | `true` | Show mesh switch (Circle/Plane). |
 | `allowMouseInteraction` | `boolean` | `true` | Allow mouse interaction with 3D view. |
@@ -74,10 +77,11 @@ function App() {
 | `validateShader` | function | Checks GDShader source before sending to Godot; <br/> Returns `{ valid, errors }`. Use for custom editor validation or before calling `loadShader`. |
 | `ValidationError` | type | One validation error: `{ line: number; message: string }`. |
 | `ValidationResult` | type | Return type of `validateShader`: `{ valid: boolean; errors: ValidationError[] }`. |
+| `RGS_EMBED_FOLDER` | const | `'react_godot_shader_preview_embed'` - folder name created by postinstall. |
 
 ## How the preview works
 
-1. The component renders an **iframe** whose `src` is **`/godot/embed.html`** (from the package **godot/** folder).
+1. The component renders an **iframe** whose `src` is the **`embedUrl`** you pass (default: `/react_godot_shader_preview_embed/embed.html` after postinstall).
 2. **embed.html** loads the Godot Web build (engine + exported game). When the game is ready, the Godot project assigns a bridge object to **`window.top.GodotShaderViewer`** - i.e. the parent page’s `window`, since the game runs inside the iframe. The React app therefore sees it on its own **`window.GodotShaderViewer`**.
 3. The component **polls** for `window.GodotShaderViewer` until it appears, then sets **`onSuccess`**, **`onError`**, and **`onShaderLoaded`** on that object (so Godot can call back) and uses **`loadShader`**, **`setParameter`**, **`setDisplayMode`** to drive the preview.
 
