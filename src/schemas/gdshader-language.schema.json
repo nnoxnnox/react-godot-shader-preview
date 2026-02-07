@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gdshader-language",
+  "title": "GDShader language",
+  "description": "Schema and full description of the Godot shading language (GDShader). Based on GLSL ES 3.0 with Godot-specific extensions. Used to validate parsed shader documents.",
+  "type": "object",
+  "required": ["shaderType", "entrypoint", "statements"],
+  "properties": {
+    "shaderType": {
+      "type": "string",
+      "minLength": 1,
+      "enum": ["spatial", "canvas_item", "particles", "sky", "fog"],
+      "description": "Shader type declaration. spatial = 3D; canvas_item = 2D/GUI; particles = GPU particles; sky = skybox; fog = volumetric fog."
+    },
+    "entrypoint": {
+      "type": "string",
+      "minLength": 1,
+      "enum": ["vertex", "fragment", "light", "start", "process", "sky", "fog"],
+      "description": "Main entrypoint function: vertex, fragment, light (spatial/canvas_item); start, process (particles); sky (sky); fog (fog)."
+    },
+    "statements": {
+      "type": "array",
+      "description": "Parsed non-empty lines with semicolon requirements.",
+      "items": {
+        "type": "object",
+        "required": ["line", "text", "requiresSemicolon", "endsWithSemicolon"],
+        "properties": {
+          "line": { "type": "number", "description": "1-based source line number." },
+          "text": { "type": "string", "description": "Stripped line content (no line comments, block comments removed)." },
+          "requiresSemicolon": { "type": "boolean", "description": "Whether the statement must end with semicolon." },
+          "endsWithSemicolon": { "type": "boolean", "description": "Whether the line ends with semicolon." }
+        }
+      }
+    }
+  },
+  "gdshaderLanguage": {
+    "shaderTypes": {
+      "spatial": { "entrypoints": ["vertex", "fragment", "light"], "description": "3D object materials." },
+      "canvas_item": { "entrypoints": ["vertex", "fragment", "light"], "description": "2D and GUI elements." },
+      "particles": { "entrypoints": ["start", "process"], "description": "GPU particle systems." },
+      "sky": { "entrypoints": ["sky"], "description": "Sky shaders (skybox)." },
+      "fog": { "entrypoints": ["fog"], "description": "Volumetric fog (FogVolume)." }
+    },
+    "dataTypes": {
+      "void": "Return type for functions that return nothing.",
+      "bool": "Boolean, values true or false.",
+      "bvec2": "Two-component boolean vector.",
+      "bvec3": "Three-component boolean vector.",
+      "bvec4": "Four-component boolean vector.",
+      "int": "32-bit signed integer.",
+      "ivec2": "Two-component signed integer vector.",
+      "ivec3": "Three-component signed integer vector.",
+      "ivec4": "Four-component signed integer vector.",
+      "uint": "32-bit unsigned integer.",
+      "uvec2": "Two-component unsigned integer vector.",
+      "uvec3": "Three-component unsigned integer vector.",
+      "uvec4": "Four-component unsigned integer vector.",
+      "float": "32-bit floating-point.",
+      "vec2": "Two-component float vector.",
+      "vec3": "Three-component float vector.",
+      "vec4": "Four-component float vector.",
+      "mat2": "2x2 matrix (column major).",
+      "mat3": "3x3 matrix (column major).",
+      "mat4": "4x4 matrix (column major).",
+      "sampler2D": "2D texture sampler (float).",
+      "isampler2D": "2D texture sampler (signed int).",
+      "usampler2D": "2D texture sampler (unsigned int).",
+      "sampler2DArray": "2D texture array sampler.",
+      "isampler2DArray": "2D texture array (signed int).",
+      "usampler2DArray": "2D texture array (unsigned int).",
+      "sampler3D": "3D texture sampler.",
+      "isampler3D": "3D texture (signed int).",
+      "usampler3D": "3D texture (unsigned int).",
+      "samplerCube": "Cubemap sampler.",
+      "samplerCubeArray": "Cubemap array (Forward+, Mobile).",
+      "samplerExternalOES": "External sampler (Compatibility/Android)."
+    },
+    "keywords": [
+      "shader_type", "render_mode", "uniform", "varying", "const", "global",
+      "struct", "if", "else", "for", "while", "do", "switch", "case", "default", "break",
+      "return", "discard", "in", "out", "inout", "flat", "smooth",
+      "lowp", "mediump", "highp", "group_uniforms"
+    ],
+    "operators": {
+      "precedence": [
+        { "level": 1, "class": "parenthetical", "operators": ["()"] },
+        { "level": 2, "class": "unary", "operators": ["+", "-", "!", "~"] },
+        { "level": 3, "class": "multiplicative", "operators": ["/", "*", "%"] },
+        { "level": 4, "class": "additive", "operators": ["+", "-"] },
+        { "level": 5, "class": "bitwise shift", "operators": ["<<", ">>"] },
+        { "level": 6, "class": "relational", "operators": ["<", ">", "<=", ">="] },
+        { "level": 7, "class": "equality", "operators": ["==", "!="] },
+        { "level": 8, "class": "bitwise AND", "operators": ["&"] },
+        { "level": 9, "class": "bitwise XOR", "operators": ["^"] },
+        { "level": 10, "class": "bitwise OR", "operators": ["|"] },
+        { "level": 11, "class": "logical AND", "operators": ["&&"] },
+        { "level": 12, "class": "logical OR", "operators": ["||"] }
+      ]
+    },
+    "comments": {
+      "line": "// ...",
+      "block": "/* ... */",
+      "documentation": "/** ... */ (above uniform, supports BBCode for inspector tooltip)."
+    },
+    "builtins": {
+      "constants": ["PI", "TAU", "E", "TIME"],
+      "spatial": ["VERTEX", "NORMAL", "TANGENT", "BINORMAL", "UV", "UV2", "COLOR", "ALBEDO", "ROUGHNESS", "METALLIC", "SPECULAR", "EMISSION", "MODEL_MATRIX", "VIEW_MATRIX", "INV_VIEW_MATRIX", "PROJECTION_MATRIX", "MODEL_VIEW_MATRIX", "INV_PROJECTION_MATRIX", "VIEWPORT_SIZE", "TIME", "CAMERA_POSITION", "CAMERA_DIRECTION", "OUTPUT_IS_SRGB", "NODE_POSITION_WORLD", "NODE_POSITION_VIEW", "VIEW_INDEX", "VIEW_MONO_LEFT", "VIEW_RIGHT"],
+      "canvas_item": ["VERTEX", "UV", "COLOR", "MODEL_MATRIX", "CANVAS_MATRIX", "SCREEN_PIXEL_SIZE", "INSTANCE_CUSTOM", "AT_LIGHT_PASS", "TEXTURE", "TEXTURE_PIXEL_SIZE", "POINT_SIZE", "TIME", "AT_LIGHT_PASS", "SCREEN_UV", "SCREEN_TEXTURE", "NORMAL_MAP", "NORMAL_MAP_DEPTH"],
+      "particles": ["LIFETIME", "DELTA", "NUMBER", "INDEX", "EMISSION_TRANSFORM", "TRANSFORM", "VELOCITY", "COLOR", "CUSTOM", "RESTART", "ACTIVE"],
+      "sky": ["POSITION", "SKY_COVERAGE", "SKY_COVERAGE_MULTIPLIER", "HDR", "LIGHT0_ENABLED", "LIGHT0_COLOR", "LIGHT0_ENERGY", "LIGHT0_DIRECTION", "LIGHT0_IS_SUN", "LIGHT1_ENABLED", "LIGHT2_ENABLED", "RADIANCE", "IRRADIANCE", "TIME", "UP", "EYE_DIR"],
+      "fog": ["WORLD_POSITION", "OBJECT_POSITION", "UVW", "SIZE", "SDF", "ALBEDO", "DENSITY", "SDF_TO_SCREEN", "LIGHT", "TIME"]
+    },
+    "uniformHints": [
+      "source_color", "hint_range(min, max[, step])", "hint_enum(\"A\", \"B\", ...)",
+      "hint_normal", "hint_default_white", "hint_default_black", "hint_default_transparent",
+      "hint_anisotropy", "hint_roughness_r", "hint_screen_texture", "hint_depth_texture",
+      "filter_nearest", "filter_linear", "repeat_enable", "repeat_disable"
+    ],
+    "references": {
+      "godotDocs": "https://docs.godotengine.org/en/stable/tutorials/shaders/shader_reference/shading_language.html",
+      "glslEs": "GLSL ES 3.0 compatible; Godot extends with shader_type, render_mode, built-ins."
+    }
+  }
+}
