@@ -45,7 +45,7 @@ export function useGodotMaterialPreview(
     setTimeout(hideStatus, statusHideDelayMs);
   }, [statusHideDelayMs, hideStatus]);
 
-  const getViewer = useCallback(() => viewerRef.current ?? iframeRef.current?.contentWindow?.GodotShaderViewer, []);
+  const getViewer = useCallback(() => viewerRef.current ?? (typeof window !== 'undefined' ? window.GodotShaderViewer : undefined), []);
 
   const attachCallbacks = useCallback((viewer: NonNullable<Window['GodotShaderViewer']>) => {
     viewer.onSuccess = () => { showStatus('Shader loaded.', false); onLoadSuccess?.(); };
@@ -83,7 +83,6 @@ export function useGodotMaterialPreview(
   useImperativeHandle(ref, () => ({ loadShader, isReady: () => !!getViewer()?.loadShader }), [loadShader, getViewer]);
 
   const setDisplayMode = useCallback((mode: DisplayMode) => {
-    if (mode === 'Skybox' && !skyModeAvailable) return;
     getViewer()?.setDisplayMode?.(mode);
     setDisplayModeState(mode);
   }, [skyModeAvailable, getViewer]);
@@ -117,9 +116,7 @@ export function useGodotMaterialPreview(
     let cancelled = false;
     const poll = () => {
       if (cancelled) return;
-      const win = typeof window !== 'undefined' ? window : null;
-      const iframeWin = iframe.contentWindow as (Window & { GodotShaderViewer?: Window['GodotShaderViewer'] }) | null;
-      const viewer = win?.GodotShaderViewer ?? iframeWin?.GodotShaderViewer;
+      const viewer = typeof window !== 'undefined' ? window.GodotShaderViewer : undefined;
       if (viewer?.loadShader) {
         viewerRef.current = viewer;
         setGodotLoading(false);
@@ -137,7 +134,7 @@ export function useGodotMaterialPreview(
       clearTimeout(t);
       iframe.removeEventListener('load', poll);
     };
-  }, [props.godotEmbedUrl, showStatus, onReady]);
+  }, [showStatus, onReady]);
 
   return {
     iframeRef,

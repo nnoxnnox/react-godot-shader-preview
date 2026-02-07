@@ -49,7 +49,6 @@ declare global {
 }
 
 export interface GodotMaterialPreviewProps {
-  godotEmbedUrl?: string;
   previewWidth?: number;
   showMeshSwitch?: boolean;
   allowMouseInteraction?: boolean;

@@ -52,9 +52,10 @@ const cn = {
   paramSelect: 'rgs-paramSelect',
 } as const;
 
+const GODOT_EMBED_URL = '/godot/embed.html';
+
 export interface GodotMaterialPreviewViewProps {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
-  godotEmbedUrl: string;
   previewWidth: number;
   showMeshSwitch: boolean;
   allowMouseInteraction: boolean;
@@ -73,7 +74,6 @@ export interface GodotMaterialPreviewViewProps {
 
 export function GodotMaterialPreviewView({
   iframeRef,
-  godotEmbedUrl,
   previewWidth,
   showMeshSwitch,
   allowMouseInteraction,
@@ -93,7 +93,7 @@ export function GodotMaterialPreviewView({
     <div className={`${cn.root} ${className ?? ''}`} style={{ flex: `0 0 ${previewWidth}px` }}>
       <div className={cn.previewWrap}>
         <div className={cn.preview}>
-          <iframe ref={iframeRef} src={godotEmbedUrl} title="Shader preview" className={cn.canvas} />
+          <iframe ref={iframeRef} src={GODOT_EMBED_URL} title="Shader preview" className={cn.canvas} />
           {!allowMouseInteraction && <div className={cn.mouseBlockOverlay} aria-hidden />}
           {showMeshSwitch && (
             <div className={cn.modeStrip} role="group" aria-label="Preview display mode">
