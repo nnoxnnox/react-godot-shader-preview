@@ -16,10 +16,11 @@
       "default": "./dist/style.css"
     }
   },
-  "files": ["dist", "godot"],
+  "files": ["dist", "godot", "scripts"],
   "scripts": {
     "build": "tsc && node scripts/copy-css.mjs",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "postinstall": "node scripts/copy-embed.mjs"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
