@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Godot Shader Preview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+    #godot-canvas { display: block; width: 100%; height: 100%; object-fit: cover; cursor: grab; }
+  </style>
+</head>
+<body>
+  <canvas id="godot-canvas"></canvas>
+  <script src="index.js"></script>
+  <script>
+    (function() {
+      if (typeof Engine === 'undefined') {
+        console.error('[embed] Engine not found. index.js did not load.');
+        return;
+      }
+      var baseConfig = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":2830792,"index.wasm":30805867},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+      var path = window.location.pathname;
+      var assetBase = window.location.origin + path.replace(/\/[^/]*$/, '/');
+      var canvasEl = document.getElementById('godot-canvas');
+      var engine = new Engine(baseConfig);
+      var startOverrides = {
+        canvas: canvasEl,
+        canvasResizePolicy: 2,
+        locateFile: function(path) {
+          if (path.slice(-5) === '.wasm') return assetBase + 'index.wasm';
+          if (path.slice(-4) === '.pck') return assetBase + 'index.pck';
+          return assetBase + path;
+        },
+        onProgress: function(current, total) {
+          if (total > 0) console.log('[embed] Loading: ' + Math.round((current / total) * 100) + '%');
+        },
+        onPrint: function() { console.log('[Godot]', Array.prototype.slice.call(arguments)); },
+        onPrintError: function() { console.error('[Godot]', Array.prototype.slice.call(arguments)); }
+      };
+      engine.startGame(startOverrides).then(function() {
+        console.log('[embed] Godot started, waiting for GodotShaderViewer on window.top');
+      }).catch(function(err) {
+        console.error('[embed] startGame failed', err);
+      });
+    })();
+  </script>
+</body>
+</html>
