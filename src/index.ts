@@ -1,6 +1,6 @@
 import './GodotMaterialPreview.css';
 
-export { GodotMaterialPreview } from './GodotMaterialPreview';
+export { GodotMaterialPreview, RGS_EMBED_FOLDER } from './GodotMaterialPreview';
 export type {
   GodotMaterialPreviewProps,
   GodotMaterialPreviewHandle,
