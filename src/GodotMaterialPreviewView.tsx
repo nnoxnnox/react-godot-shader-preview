@@ -19,6 +19,7 @@ import { DEFAULT_SAMPLER_STATE, rgbToHex, hexToRgb } from './GodotMaterialPrevie
 
 const cn = {
   root: 'rgs-root',
+  rootFill: 'rgs-rootFill',
   previewWrap: 'rgs-previewWrap',
   preview: 'rgs-preview',
   canvas: 'rgs-canvas',
@@ -28,8 +29,7 @@ const cn = {
   modeStripButton: 'rgs-modeStripButton',
   modeStripButtonActive: 'rgs-modeStripButtonActive',
   loadingOverlay: 'rgs-loadingOverlay',
-  statusBar: 'rgs-statusBar',
-  statusBarSlot: 'rgs-statusBarSlot',
+  statusOverlay: 'rgs-statusOverlay',
   statusSuccess: 'rgs-statusSuccess',
   statusError: 'rgs-statusError',
   paramsPanel: 'rgs-paramsPanel',
@@ -57,7 +57,7 @@ const cn = {
 export interface GodotMaterialPreviewViewProps {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
   embedUrl: string;
-  previewWidth: number;
+  previewWidth?: number;
   showMeshSwitch: boolean;
   allowMouseInteraction: boolean;
   showParameters: boolean;
@@ -91,8 +91,11 @@ export function GodotMaterialPreviewView({
   setParameter,
   className,
 }: GodotMaterialPreviewViewProps) {
+  const rootStyle = previewWidth != null ? { flex: `0 0 ${previewWidth}px` } : undefined;
+  const rootClass = [cn.root, previewWidth == null ? cn.rootFill : '', className].filter(Boolean).join(' ');
+
   return (
-    <div className={`${cn.root} ${className ?? ''}`} style={{ flex: `0 0 ${previewWidth}px` }}>
+    <div className={rootClass} style={rootStyle}>
       <div className={cn.previewWrap}>
         <div className={cn.preview}>
           <iframe ref={iframeRef} src={embedUrl} title="Shader preview" className={cn.canvas} />
@@ -100,20 +103,20 @@ export function GodotMaterialPreviewView({
           <div className={cn.previewOverlays}>
             {showMeshSwitch && (
               <div className={cn.modeStrip} role="group" aria-label="Preview display mode">
-                <button type="button" className={`${cn.modeStripButton} ${displayMode === 'Circle' ? cn.modeStripButtonActive : ''}`} onClick={() => setDisplayMode('Circle')} title="Sphere" aria-pressed={displayMode === 'Circle'} aria-label="Sphere"><CircleIcon /></button>
-                <button type="button" className={`${cn.modeStripButton} ${displayMode === 'Plane' ? cn.modeStripButtonActive : ''}`} onClick={() => setDisplayMode('Plane')} title="Plane" aria-pressed={displayMode === 'Plane'} aria-label="Plane"><DiamondIcon /></button>
+                <button type="button" className={`${cn.modeStripButton} ${displayMode === 'Circle' ? cn.modeStripButtonActive : ''}`} onClick={() => setDisplayMode('Circle')} aria-pressed={displayMode === 'Circle'} aria-label="Sphere"><CircleIcon /></button>
+                <button type="button" className={`${cn.modeStripButton} ${displayMode === 'Plane' ? cn.modeStripButtonActive : ''}`} onClick={() => setDisplayMode('Plane')} aria-pressed={displayMode === 'Plane'} aria-label="Plane"><DiamondIcon /></button>
               </div>
             )}
             {godotLoading && (
               <div className={cn.loadingOverlay}><div>{status?.message ?? 'Loading...'}</div></div>
             )}
+            {status && !godotLoading && (
+              <div className={cn.statusOverlay}>
+                <span className={status.error ? cn.statusError : cn.statusSuccess}>{status.message}</span>
+              </div>
+            )}
           </div>
         </div>
-      </div>
-      <div className={cn.statusBarSlot}>
-        {status && !godotLoading ? (
-          <span className={status.error ? cn.statusError : cn.statusSuccess}>{status.message}</span>
-        ) : null}
       </div>
       {showParameters && (
         <div className={cn.paramsPanel}>

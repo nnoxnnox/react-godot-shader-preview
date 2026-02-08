@@ -9,7 +9,6 @@ export type { ShaderUniform, GodotMaterialPreviewHandle, ShaderLoadedPayload, Di
 
 const DEFAULTS = {
   embedUrl: `/${RGS_EMBED_FOLDER}/embed.html`,
-  previewWidth: 512,
   showMeshSwitch: true,
   allowMouseInteraction: true,
   showParameters: false,

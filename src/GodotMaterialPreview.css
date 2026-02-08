@@ -20,6 +20,14 @@
   min-height: 0;
 }
 
+/* When no fixed previewWidth: fill parent so user can drop component in any container */
+.rgs-rootFill {
+  width: 100%;
+  height: 100%;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
 .rgs-previewWrap {
   max-width: 100%;
   min-width: 0;
@@ -108,17 +116,21 @@
   z-index: 10;
 }
 
-/* Status: fixed-height slot so canvas size does not change when status appears */
-.rgs-statusBarSlot {
-  flex: 0 0 auto;
+/* Status as overlay on frame only (no separate block) */
+.rgs-statusOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9;
   display: flex;
   align-items: center;
-  margin-top: 8px;
-  min-height: 32px;
+  justify-content: center;
+  padding: 8px 12px;
+  pointer-events: none;
 }
 
-.rgs-statusBar { display: flex; align-items: center; min-height: 32px; }
-.rgs-statusSuccess, .rgs-statusError { padding: 8px 12px; border-radius: 4px; font-size: 13px; }
+.rgs-statusSuccess, .rgs-statusError { padding: 6px 10px; border-radius: 4px; font-size: 12px; }
 .rgs-statusSuccess { background: var(--rgs-ok); color: var(--rgs-ok-fg); }
 .rgs-statusError { background: var(--rgs-err); color: var(--rgs-err-fg); }
 
