@@ -1,6 +1,6 @@
 {
   "name": "react-godot-shader-preview",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "description": "React component for live Godot shader preview via WebAssembly. Load shader code, switch mesh (sphere/plane), edit uniforms and samplers.",
   "type": "module",
   "main": "./dist/index.js",
