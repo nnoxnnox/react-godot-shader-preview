@@ -32,7 +32,7 @@
   max-width: 100%;
   min-width: 0;
   flex: 1 1 0;
-  min-height: 0;
+  min-height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -49,6 +49,8 @@
   width: auto;
   max-width: 100%;
   max-height: 100%;
+  min-width: 200px;
+  min-height: 200px;
 }
 
 .rgs-canvas {
