@@ -212,3 +212,28 @@
 @media (max-width: 700px) {
   .rgs-previewWrap { flex: 0 0 auto; width: 100%; max-width: 400px; }
 }
+
+/* Print: keep iframe and preview block on one page, avoid breaks inside */
+@media print {
+  .rgs-root,
+  .rgs-previewWrap,
+  .rgs-preview,
+  .rgs-canvas {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .rgs-previewOverlays,
+  .rgs-modeStrip,
+  .rgs-statusOverlay,
+  .rgs-paramsPanel,
+  .rgs-paramRow {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Keep iframe content from breaking; canvas is the iframe */
+  .rgs-canvas {
+    overflow: hidden;
+  }
+}
