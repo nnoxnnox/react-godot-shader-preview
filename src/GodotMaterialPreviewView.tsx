@@ -98,7 +98,7 @@ export function GodotMaterialPreviewView({
     <div className={rootClass} style={rootStyle}>
       <div className={cn.previewWrap}>
         <div className={cn.preview}>
-          <iframe ref={iframeRef} src={embedUrl} title="Shader preview" className={cn.canvas} />
+          <iframe ref={iframeRef} src={embedUrl} title="Shader preview" className={cn.canvas} tabIndex={-1} />
           {!allowMouseInteraction && <div className={cn.mouseBlockOverlay} aria-hidden />}
           <div className={cn.previewOverlays}>
             {showMeshSwitch && (
