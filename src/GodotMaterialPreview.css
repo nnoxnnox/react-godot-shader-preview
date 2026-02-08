@@ -41,7 +41,6 @@
   position: relative;
   overflow: hidden;
   border: 1px solid var(--rgs-b);
-  border-radius: 6px;
   background: #000;
   aspect-ratio: 1;
   height: 100%;
