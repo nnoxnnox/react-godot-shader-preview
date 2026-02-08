@@ -136,7 +136,6 @@
 
 /* Parameters panel */
 .rgs-paramsPanel {
-  margin-top: 10px;
   padding: 10px 12px 12px;
   background: var(--rgs-bg);
   border: 1px solid var(--rgs-b);
