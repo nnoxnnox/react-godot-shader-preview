@@ -30,11 +30,10 @@
 
 .rgs-previewWrap {
   flex: 1 1 0;
-  min-height: 100%;
-  min-width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .rgs-preview {
@@ -49,6 +48,7 @@
   max-height: 100%;
   min-width: 200px;
   min-height: 200px;
+  flex-shrink: 0;
 }
 
 .rgs-canvas {
@@ -136,6 +136,7 @@
 
 /* Parameters panel */
 .rgs-paramsPanel {
+  flex-shrink: 0;
   padding: 10px 12px 12px;
   background: var(--rgs-bg);
   border: 1px solid var(--rgs-b);
